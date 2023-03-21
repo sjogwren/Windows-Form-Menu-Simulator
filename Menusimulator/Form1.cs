@@ -37,6 +37,8 @@ namespace Menusimulator
             }
             else
             {
+
+                //Create an XML file which will store all user input
                 var dir = AppDomain.CurrentDomain.BaseDirectory;
                 _useroptions = new List<User>();
                 _useroptions.Add(new User() { Username = username, MenuItem = menuoption });
@@ -61,6 +63,8 @@ namespace Menusimulator
                         doc.Save(dir + "Employee.xml");
                     }
 
+
+                    //Get current menu items from a text file
                     string[] lines = File.ReadLines(dir + "menus.txt").ToArray();
                     string search = ", ";
                     List<string> menuitems = new List<string>();
@@ -71,6 +75,8 @@ namespace Menusimulator
                         menuitems.Add(result);
                     }
 
+
+                    //Save user items to a List object
                     List<string> vs = new List<string>();
                     XElement root = XElement.Load(dir + "Employee.xml");
                     var selection = from subject in root.Descendants()
@@ -84,6 +90,8 @@ namespace Menusimulator
                     List<users> ul = new List<users>();
                     var OptionsModel = new OptionsModel();
                     OptionsModel.UseroptionsViewModel = new List<users>();
+
+                    //Get all user items for serialization
                     foreach (var item in selection)
                     {
                         OptionsModel.UseroptionsViewModel.Add(ToSubscriptFormula(item.MenuItem, item.Username, menuitems));
@@ -94,15 +102,7 @@ namespace Menusimulator
 
                     // this is of datatype string
                     var json = JsonConvert.SerializeObject(new { users = OptionsModel.UseroptionsViewModel }, Newtonsoft.Json.Formatting.Indented);
-                    //var newStr = json.Substring(1, json.Length - 1);
-
-                    //newStr = newStr.Replace("}]", "},");
-
-
-                    using (System.IO.StreamWriter sw = System.IO.File.AppendText(dir + "\\Output.json"))
-                    {
-                        sw.WriteLine(json);
-                    }
+                    System.IO.File.WriteAllText(dir + "\\Output.json", json);
 
                     MessageBox.Show("Successfully added new user", "SUCEESS", MessageBoxButtons.OK);
                     textBox1.Text = "";
@@ -113,6 +113,9 @@ namespace Menusimulator
 
         public users ToSubscriptFormula(string input, string Username, List<string> MenuItems)
         {
+            //Convert the input to a char array
+            //Then check each character if (Y) or (N)
+            //Replace the Y with the appropriate index and create a new alphanumeric string
             input = input.Replace(" ", "");
             var characters = input.ToArray();
             String result = "";
@@ -133,16 +136,22 @@ namespace Menusimulator
             Useroptions.menuItems = new List<string>();
             ListItemViewModel lvm = new ListItemViewModel();
             lvm.ListItemsList = new List<string>();
+
+            //Convert char array to list
             foreach (var x in list)
             {
                 lvm.ListItemsList.Add(x.ToString());
             }
+
+            //Filter all items to get only numbers as these will be used to check a against a text file menu items
             lvm.ListItemsList = (from x in lvm.ListItemsList
                                  where x != "N"
                                  select x).ToList();
             users uu = new users();
             uu.menuItems = new List<string>();
 
+
+            //Add users menu items to its own list
             foreach (var c in lvm.ListItemsList)
             {
                 int l = Convert.ToInt16(c);
@@ -157,6 +166,8 @@ namespace Menusimulator
                 i++;
             }
             users u = new users();
+
+            //Assign user menu to a list and return the function
             foreach (var c in lvm.ListItemsList)
             {
                 int l = Convert.ToInt16(c);
