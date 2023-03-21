@@ -12,11 +12,8 @@ namespace Menusimulator
 {
     public partial class Form1 : Form
     {
-        private List<Useroptions> _useroptions;
+        private List<User> _useroptions;
         DataTable dt2 = new DataTable();
-
-        private Useroptions currentUseroption;
-        private int useroption = 0;
 
         public Form1()
         {
@@ -41,8 +38,8 @@ namespace Menusimulator
             else
             {
                 var dir = AppDomain.CurrentDomain.BaseDirectory;
-                _useroptions = new List<Useroptions>();
-                _useroptions.Add(new Useroptions() { Username = username, Menuitem = menuoption });
+                _useroptions = new List<User>();
+                _useroptions.Add(new User() { Username = username, MenuItem = menuoption });
                 XmlDocument doc = new XmlDocument();
                 doc = new XmlDocument();
                 doc.Load(dir + "\\Employee.xml");
@@ -78,34 +75,34 @@ namespace Menusimulator
                     XElement root = XElement.Load(dir + "Employee.xml");
                     var selection = from subject in root.Descendants()
                                     where subject.Name.LocalName.Contains("newuser")
-                                    select new Useroptions()
+                                    select new User()
                                     {
                                         Username = subject.Element("username").Value,
-                                        Menuitem = subject.Element("menuoption").Value
+                                        MenuItem = subject.Element("menuoption").Value
                                     };
-                    List<Useroptions> chars = new List<Useroptions>();
+                    List<users> chars = new List<users>();
                     List<users> ul = new List<users>();
-                    var UseroptionsViewModel = new users();
                     var OptionsModel = new OptionsModel();
                     OptionsModel.UseroptionsViewModel = new List<users>();
                     foreach (var item in selection)
                     {
-                        UseroptionsViewModel = ToSubscriptFormula(item.Menuitem, item.Username, menuitems);
-                        var c = UseroptionsViewModel.menuItems.GroupBy(z => z.Username)
-                             .Select(group => new { Username = group.Key, Items = group.ToList() })
-                             .ToList();
+                        OptionsModel.UseroptionsViewModel.Add(ToSubscriptFormula(item.MenuItem, item.Username, menuitems));
 
-                        foreach (var x in c)
-                        {
-                            OptionsModel.UseroptionsViewModel.Add(new users()
-                            {
-                                Username = x.Username,
-                                menuItems = x.Items
-                            });
-                        }
+
+
                     }
 
+                    // this is of datatype string
+                    var json = JsonConvert.SerializeObject(new { users = OptionsModel.UseroptionsViewModel }, Newtonsoft.Json.Formatting.Indented);
+                    //var newStr = json.Substring(1, json.Length - 1);
 
+                    //newStr = newStr.Replace("}]", "},");
+
+
+                    using (System.IO.StreamWriter sw = System.IO.File.AppendText(dir + "\\Output.json"))
+                    {
+                        sw.WriteLine(json);
+                    }
 
                     MessageBox.Show("Successfully added new user", "SUCEESS", MessageBoxButtons.OK);
                     textBox1.Text = "";
@@ -133,7 +130,7 @@ namespace Menusimulator
 
             var list = result.ToArray();
             users Useroptions = new users();
-            Useroptions.menuItems = new List<Useroptions>();
+            Useroptions.menuItems = new List<string>();
             ListItemViewModel lvm = new ListItemViewModel();
             lvm.ListItemsList = new List<string>();
             foreach (var x in list)
@@ -143,6 +140,9 @@ namespace Menusimulator
             lvm.ListItemsList = (from x in lvm.ListItemsList
                                  where x != "N"
                                  select x).ToList();
+            users uu = new users();
+            uu.menuItems = new List<string>();
+
             foreach (var c in lvm.ListItemsList)
             {
                 int l = Convert.ToInt16(c);
@@ -150,44 +150,33 @@ namespace Menusimulator
                 {
                     if (l == Convert.ToInt16(c))
                     {
-                        Useroptions u = new Useroptions();
+                        uu.menuItems.Add(MenuItems.ToList()[l]);
+                        break;
+                    }
+                }
+                i++;
+            }
+            users u = new users();
+            foreach (var c in lvm.ListItemsList)
+            {
+                int l = Convert.ToInt16(c);
+                foreach (var item in MenuItems.ToList()[l])
+                {
+                    if (l == Convert.ToInt16(c))
+                    {
+    
                         u.Username = Username;
-                        u.Menuitem = MenuItems.ToList()[l];
-
-                        Useroptions.menuItems.Add(u);
+                        u.menuItems = uu.menuItems;
                         break;
                     }
                 }
                 i++;
             }
 
-            Root r = new Root();
-            User user = new User();
-            user.menuItems = new List<string>();
-            r.users = new List<User>();
-            user.userName = Username;
-            foreach (var item in Useroptions.menuItems)
-            {
-                user.menuItems.Add(item.Menuitem);
-            }
-            r.users.Add(user);
-            var dir = AppDomain.CurrentDomain.BaseDirectory;
-
-
-            // this is of datatype string
-            var json =  JsonConvert.SerializeObject(r.users, Newtonsoft.Json.Formatting.Indented);
-            //var newStr = json.Substring(1, json.Length - 1);
-         
-            //newStr = newStr.Replace("}]", "},");
-
-
-            using (System.IO.StreamWriter sw = System.IO.File.AppendText(dir+"\\Output.json"))
-            {
-                sw.WriteLine(json);
-            }
+           
 
             
-            return Useroptions;
+            return u;
 
         }
     }
